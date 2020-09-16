@@ -1,0 +1,10 @@
+version: "2"
+services:
+  web:
+    image: nginx
+    container_name: "testing-container"
+    ports:
+     - "8080:80"
+    environment:
+     - NGINX_HOST=foobar.com
+     - NGINX_PORT=80
