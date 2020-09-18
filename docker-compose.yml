@@ -1,8 +1,15 @@
 version: "2"
 services:
+  proxy:
+    image: bspjojo/docker-proxy:latest
+    container_name: proxy
+    ports:
+     - "8090:80"
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock:rw
   web:
     image: nginx
-    container_name: "testing-container"
+    container_name: "web"
     ports:
      - "8080:80"
     environment:
