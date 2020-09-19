@@ -1,5 +1,5 @@
 Dockerfile
 docker-compose.yml
-nginx.conf
+default.conf
 .git
 .gitignore

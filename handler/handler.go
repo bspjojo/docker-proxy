@@ -3,13 +3,14 @@ package handler
 import (
 	"log"
 
+	configTypes "main/configStructs"
 	"main/handler/stringBuilder"
 	"main/handler/writer"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-func HandleDockerEvent(msg *docker.APIEvents, client *docker.Client) {
+func HandleDockerEvent(msg *docker.APIEvents, client *docker.Client, config configTypes.AppConfig) {
 	if msg.Type == "container" {
 		log.Println("=============================")
 		log.Println(msg)
@@ -42,12 +43,12 @@ func HandleDockerEvent(msg *docker.APIEvents, client *docker.Client) {
 			log.Println("TimeNano", msg.TimeNano)
 			log.Println("=============================")
 
-			OrchestrateBuildConfig(client)
+			OrchestrateBuildConfig(client, config)
 		}
 	}
 }
 
-func OrchestrateBuildConfig( client *docker.Client) {
+func OrchestrateBuildConfig(client *docker.Client, config configTypes.AppConfig) {
 	content := stringBuilder.BuildString(client)
-	writer.WriteContent(content)
+	writer.WriteContent(content, config.OutPath)
 }

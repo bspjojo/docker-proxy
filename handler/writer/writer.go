@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-func WriteContent(content string) {
-	f, err := os.Create("nginx.conf")
+func WriteContent(content string, path string) {
+	f, err := os.Create(path + "default.conf")
 	if err != nil {
 		fmt.Println(err)
 		return

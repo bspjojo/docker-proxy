@@ -1,13 +1,29 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
+	configTypes "main/configStructs"
 	"main/handler"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
 
 func main() {
+	data, err := ioutil.ReadFile("./config/config.json")
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	var config configTypes.AppConfig
+
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		panic(err)
@@ -19,12 +35,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	handler.OrchestrateBuildConfig(client)
+	handler.OrchestrateBuildConfig(client, config)
 
 	for {
 		select {
 		case msg := <-listener:
-			handler.HandleDockerEvent(msg, client)
+			handler.HandleDockerEvent(msg, client, config)
 		}
 	}
 }
