@@ -15,6 +15,14 @@ services:
     environment:
       - NGINX_HOST=foobar.com
       - NGINX_PORT=80
+  api1:
+    image: bspjojo/testing-api:latest
+    environment:
+      - PROXY_LOCATION=/api/service1
+  api2:
+    image: bspjojo/testing-api:latest
+    environment:
+      - PROXY_LOCATION=/api/service2
   extra:
     image: nginx
     container_name: "extra"
