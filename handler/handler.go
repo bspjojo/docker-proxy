@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"log"
+	"os/exec"
+	"runtime"
 
 	configTypes "main/configStructs"
 	"main/handler/stringBuilder"
@@ -51,4 +54,26 @@ func HandleDockerEvent(msg *docker.APIEvents, client *docker.Client, config conf
 func OrchestrateBuildConfig(client *docker.Client, config configTypes.AppConfig) {
 	content := stringBuilder.BuildString(client)
 	writer.WriteContent(content, config.OutPath)
+
+	if runtime.GOOS == "windows" {
+		fmt.Println("Can't Execute this on a windows machine")
+	} else {
+		reloadConfig()
+	}
+}
+
+func reloadConfig() {
+	out, err := exec.Command("nginx", "-s", "reload").Output()
+
+	// if there is an error with our execution
+	// handle it here
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+	// as the out variable defined above is of type []byte we need to convert
+	// this to a string or else we will see garbage printed out in our console
+	// this is how we convert it to a string
+	fmt.Println("Command Successfully Executed")
+	output := string(out[:])
+	fmt.Println(output)
 }

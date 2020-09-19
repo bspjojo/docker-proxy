@@ -14,7 +14,12 @@ import (
 func main() {
 	data, err := ioutil.ReadFile("./config/config.json")
 	if err != nil {
-		fmt.Print(err)
+		ldata, err := ioutil.ReadFile("/app/config/config.json")
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+
+		data = ldata
 	}
 
 	var config configTypes.AppConfig
