@@ -42,7 +42,7 @@ func BuildString(client *docker.Client) string {
 
 func buildContainerPart(container *docker.Container) string {
 	var builder strings.Builder
-	builder.WriteString("  location /proxy" + container.Name + " {\n")
+	builder.WriteString("  location " + container.Name + " {\n")
 
 	ports := container.NetworkSettings.Ports
 
@@ -53,7 +53,7 @@ func buildContainerPart(container *docker.Container) string {
 
 	port := keys[0]
 
-	builder.WriteString("    proxy_pass      http://" + container.Name + ":" + port + ";\n")
+	builder.WriteString("    proxy_pass      http:/" + container.Name + ":" + port + "/;\n")
 	builder.WriteString("  }\n")
 
 	return builder.String()
