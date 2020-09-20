@@ -2,6 +2,9 @@ package stringBuilder
 
 import (
 	"fmt"
+	"main/handler/stringBuilder/intersects"
+	"main/handler/stringBuilder/networkdata"
+	"os"
 	"strings"
 
 	docker "github.com/fsouza/go-dockerclient"
@@ -9,19 +12,35 @@ import (
 
 func BuildString(client *docker.Client) string {
 	containers, err := client.ListContainers(docker.ListContainersOptions{true, false, 0, "", "", nil, nil})
-
 	if err != nil {
 		fmt.Println(err)
 		return "err"
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Println(err)
+		return "err"
+	}
+
+	curContainer, err := client.InspectContainer(hostname)
+	if err != nil {
+		fmt.Println(err)
+		return "err"
+	}
+
+	curcontainernetworks := networkdata.GetNetworksForContainer(curContainer)
+
 	var builder strings.Builder
+
+	fmt.Println("Hostname: " + hostname)
 
 	builder.WriteString("server {\n")
 	builder.WriteString("  listen       80;\n")
 
 	for _, apiContainer := range containers {
 		container, err := client.InspectContainer(apiContainer.ID)
+		fmt.Println("Evaluating container: " + container.Name)
 
 		if err != nil {
 			fmt.Println(err)
@@ -29,11 +48,15 @@ func BuildString(client *docker.Client) string {
 		}
 
 		if container.State.Running {
-			content, use := buildContainerPart(container)
-			if use {
-				builder.WriteString("\n")
+			apicontainernetworks := networkdata.GetNetworksForContainer(container)
+			if intersects.CheckIfIntersects(apicontainernetworks, curcontainernetworks) {
+				content, use := buildContainerPart(container)
+				if use {
+					fmt.Println("Container is running and available: " + container.Name)
+					builder.WriteString("\n")
 
-				builder.WriteString(content)
+					builder.WriteString(content)
+				}
 			}
 		}
 	}
@@ -44,9 +67,9 @@ func BuildString(client *docker.Client) string {
 }
 
 func buildContainerPart(container *docker.Container) (string, bool) {
-	location, hasLocation := getPathFromContainer(container)
+	location, shouldbuildcontainer := getPathFromContainer(container)
 
-	if !hasLocation {
+	if !shouldbuildcontainer {
 		return "", false
 	}
 
