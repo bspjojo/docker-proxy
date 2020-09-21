@@ -86,6 +86,7 @@ func buildContainerPart(container *docker.Container) (string, bool) {
 	port := keys[0]
 
 	builder.WriteString("    proxy_pass      http:/" + container.Name + ":" + port + ";\n")
+	builder.WriteString("    proxy_set_header Host $host;\n")
 	builder.WriteString("  }\n")
 
 	return builder.String(), true
