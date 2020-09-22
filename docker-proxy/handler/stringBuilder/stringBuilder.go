@@ -67,14 +67,13 @@ func BuildString(client *docker.Client) string {
 }
 
 func buildContainerPart(container *docker.Container) (string, bool) {
-	location, shouldbuildcontainer := getPathFromContainer(container)
+	locations, shouldbuildcontainer := getPathsFromContainer(container)
 
 	if !shouldbuildcontainer {
 		return "", false
 	}
 
 	var builder strings.Builder
-	builder.WriteString("  location " + location + " {\n")
 
 	ports := container.NetworkSettings.Ports
 
@@ -85,14 +84,17 @@ func buildContainerPart(container *docker.Container) (string, bool) {
 
 	port := keys[0]
 
-	builder.WriteString("    proxy_pass      http:/" + container.Name + ":" + port + ";\n")
-	builder.WriteString("    proxy_set_header Host $host;\n")
-	builder.WriteString("  }\n")
+	for _, location := range locations {
+		builder.WriteString("  location " + location + " {\n")
+		builder.WriteString("    proxy_pass      http:/" + container.Name + ":" + port + ";\n")
+		builder.WriteString("    proxy_set_header Host $host;\n")
+		builder.WriteString("  }\n")
+	}
 
 	return builder.String(), true
 }
 
-func getPathFromContainer(container *docker.Container) (string, bool) {
+func getPathsFromContainer(container *docker.Container) ([]string, bool) {
 	for _, env := range container.Config.Env {
 		split := strings.Split(env, "=")
 		name := split[0]
@@ -100,9 +102,9 @@ func getPathFromContainer(container *docker.Container) (string, bool) {
 
 		if name == "PROXY_LOCATION" {
 			fmt.Println(env, name, val)
-			return val, true
+			return strings.Split(val, ","), true
 		}
 	}
 
-	return "", false
+	return nil, false
 }
