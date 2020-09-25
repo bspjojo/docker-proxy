@@ -1,0 +1,66 @@
+<html>
+
+<head>
+    <script>
+        function getRequestToService1() {
+            makeRequest("GET", "/api/service1/getRequestToService1")
+        }
+        function postRequestToService1() {
+            makeRequest("POST", "/api/service1/getRequestToService1")
+        }
+        function getRequestToService2() {
+            makeRequest("GET", "/api/service2/getRequestToService2")
+        }
+        function postRequestToService2() {
+            makeRequest("POST", "/api/service2/getRequestToService2")
+        }
+
+        function makeRequest(method, url) {
+            const Http = new XMLHttpRequest();
+
+            Http.open(method, url);
+            Http.send();
+
+            Http.onreadystatechange = (e) => {
+                console.log(e)
+                document.getElementById('content').innerHTML = JSON.stringify(JSON.parse(Http.responseText), undefined, 2);
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <p>
+        <a href="/">/</a>
+    </p>
+    <p>
+        <a href="/app">/app</a>
+    </p>
+
+    <table>
+        <tr>
+            <th>Service 1</th>
+            <th>Service 2</th>
+        </tr>
+        <tr>
+            <th>
+                <button onclick="getRequestToService1()">Get</button>
+            </th>
+            <th>
+                <button onclick="getRequestToService2()">Get</button>
+            </th>
+        </tr>
+        <tr>
+            <th>
+                <button onclick="postRequestToService1()">Post</button>
+            </th>
+            <th>
+                <button onclick="postRequestToService2()">Post</button>
+            </th>
+        </tr>
+    </table>
+
+    <pre id="content"></pre>
+</body>
+
+</html>
