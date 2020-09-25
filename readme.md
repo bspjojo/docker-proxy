@@ -93,7 +93,6 @@ The proxy container must have access to the docker service
 Currently only supports
 
 - Having one exposed port on any container
-- One proxy location
 - HTTP between containers
 - Containers must be on the same network as the proxy container
 - Containers must have `PROXY_LOCATION` environment variable
