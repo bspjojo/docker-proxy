@@ -2,7 +2,9 @@
 
 ## What is this?
 
-A simple proxy container that proxies requests through to other containers
+A simple proxy container that proxies requests through to other containers.
+
+It generates a configuration file for an interanl instance of nginx
 
 ## Why is this a thing?
 
@@ -45,14 +47,17 @@ var service3Url = {service api base address}{some constant path for service 3}
 ``` yml
 version: "2"
 services:
-  # This is the proxy container and is the only one that needs to have port mapping
+  # This is the proxy container and is the only one that needs to have port mapping unless
+  # it is being accessed through another container proxy
   proxy:
     image: bspjojo/docker-proxy:latest
     container_name: proxy
     ports:
      - "8090:80"
+    environment:
+      - VIRTUAL_HOST=whoami.localhost
     volumes: 
-      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
   # This is a container that is ignored by the proxy container
   web:
     image: nginx
@@ -74,19 +79,33 @@ services:
     image: bspjojo/testing-api:latest
     environment:
       - PROXY_LOCATION=/api/service2
-  # This is a container that is ignored by the proxy container
+  # The proxy container will set up a proxy_pass for this container
+  # All requests at / or /app will go here
   extra:
     image: nginx
     container_name: "extra"
-    ports:
-    - "8081:80"
     environment:
-    - NGINX_HOST=foobar.com
-    - NGINX_PORT=80
+      - PROXY_LOCATION=/,/app
+    volumes: 
+      - ./testing-page/index.html:/usr/share/nginx/html/index.html
+      - ./testing-page/index.html:/usr/share/nginx/html/app/index.html
+  # https://github.com/nginx-proxy/nginx-proxy
+  # Used to proxy based on hostname in the request
+  # Not needed when accessing the proxy container directly
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
 ```
 
-The proxy container will use the exposed port on any container with an environment variable named `PROXY_LOCATION`
-The proxy container must have access to the docker service
+The proxy container will use the exposed port on any container with an environment variable named `PROXY_LOCATION`.
+
+The proxy container must have access to the docker service.
+
+If you need to support multiple locations on a single container, you can separate each location with commas. For example, `PROXY_LOCATION=/ap1/service3,/ap1/service4`. Requests to both `/api/service3` and `/api/service4` will both go to that same container.
 
 ## Limitations
 

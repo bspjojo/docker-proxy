@@ -1,5 +1,7 @@
 version: "2"
 services:
+  # This is the proxy container and is the only one that needs to have port mapping unless
+  # it is being accessed through another container proxy
   proxy:
     image: bspjojo/docker-proxy:latest
     container_name: proxy
@@ -9,6 +11,7 @@ services:
       - VIRTUAL_HOST=whoami.localhost
     volumes: 
       - /var/run/docker.sock:/var/run/docker.sock:ro
+  # This is a container that is ignored by the proxy container
   web:
     image: nginx
     container_name: "web"
@@ -17,19 +20,31 @@ services:
     environment:
       - NGINX_HOST=foobar.com
       - NGINX_PORT=80
+  # The proxy container will set up a proxy_pass for this container
+  # All requests at /api/service1 will go here
   api1:
     image: bspjojo/testing-api:latest
     environment:
       - PROXY_LOCATION=/api/service1
+  # The proxy container will set up a proxy_pass for this container
+  # All requests at /api/service2 will go here
   api2:
     image: bspjojo/testing-api:latest
     environment:
       - PROXY_LOCATION=/api/service2
+  # The proxy container will set up a proxy_pass for this container
+  # All requests at / or /app will go here
   extra:
     image: nginx
     container_name: "extra"
     environment:
-    - PROXY_LOCATION=/,/app
+      - PROXY_LOCATION=/,/app
+    volumes: 
+      - ./testing-page/index.html:/usr/share/nginx/html/index.html
+      - ./testing-page/index.html:/usr/share/nginx/html/app/index.html
+  # https://github.com/nginx-proxy/nginx-proxy
+  # Used to proxy based on hostname in the request
+  # Not needed when accessing the proxy container directly
   nginx-proxy:
     image: jwilder/nginx-proxy
     container_name: nginx-proxy
